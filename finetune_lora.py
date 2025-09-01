@@ -8,7 +8,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.cuda.amp import GradScaler, autocast
-from transformers import SamModel, SamProcessor
+from transformers import Sam2Model, Sam2Processor
 from peft import LoraConfig, get_peft_model, TaskType
 from tqdm import tqdm
 import argparse
@@ -27,7 +27,7 @@ class SAM2LoRATrainer:
     """Entrenador para finetuning de SAM2 con LoRA"""
     
     def __init__(self, 
-                 model_name="facebook/sam-vit-base", 
+                 model_name="facebook/sam2-hiera-base-plus", 
                  learning_rate=1e-4,
                  lora_r=16,
                  lora_alpha=32,
@@ -50,8 +50,8 @@ class SAM2LoRATrainer:
         print(f"LoRA config: r={lora_r}, alpha={lora_alpha}, dropout={lora_dropout}")
         
         # Cargar modelo base y procesador
-        self.processor = SamProcessor.from_pretrained(model_name)
-        base_model = SamModel.from_pretrained(model_name)
+        self.processor = Sam2Processor.from_pretrained(model_name)
+        base_model = Sam2Model.from_pretrained(model_name)
         
         # Configurar LoRA
         lora_config = LoraConfig(
@@ -86,8 +86,7 @@ class SAM2LoRATrainer:
             self.optimizer, 
             mode='min', 
             factor=0.5, 
-            patience=3, 
-            verbose=True
+            patience=3
         )
         
         # Mixed precision training
@@ -323,8 +322,8 @@ def main():
                        help='Directorio del dataset de cataratas')
     parser.add_argument('--retinopathy_dir', type=str, required=True,
                        help='Directorio del dataset de retinopatía diabética')
-    parser.add_argument('--model_name', type=str, default='facebook/sam-vit-base',
-                       help='Nombre del modelo SAM')
+    parser.add_argument('--model_name', type=str, default='facebook/sam2-hiera-base-plus',
+                       help='Nombre del modelo SAM2')
     parser.add_argument('--batch_size', type=int, default=4,
                        help='Tamaño del batch (puede ser mayor que classic)')
     parser.add_argument('--num_epochs', type=int, default=15,

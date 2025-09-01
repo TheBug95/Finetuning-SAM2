@@ -171,8 +171,8 @@ Ejemplos de uso:
                        help='Ejecutar todos los métodos')
     
     # Configuración general
-    parser.add_argument('--model_name', type=str, default='facebook/sam-vit-base',
-                       help='Nombre del modelo SAM')
+    parser.add_argument('--model_name', type=str, default='facebook/sam2-hiera-base-plus',
+                       help='Nombre del modelo SAM2')
     parser.add_argument('--max_samples', type=int, default=None,
                        help='Máximo número de muestras por dataset (para testing)')
     

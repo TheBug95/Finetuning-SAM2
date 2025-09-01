@@ -8,7 +8,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.cuda.amp import GradScaler, autocast
-from transformers import SamModel, SamProcessor
+from transformers import Sam2Model, Sam2Processor
 from tqdm import tqdm
 import argparse
 
@@ -26,7 +26,7 @@ class SAM2ClassicTrainer:
     """Entrenador para finetuning clásico de SAM2"""
     
     def __init__(self, 
-                 model_name="facebook/sam-vit-base", 
+                 model_name="facebook/sam2-hiera-base-plus", 
                  learning_rate=1e-5,
                  device=None):
         """
@@ -42,8 +42,8 @@ class SAM2ClassicTrainer:
         print(f"Modelo: {model_name}")
         
         # Cargar modelo y procesador
-        self.processor = SamProcessor.from_pretrained(model_name)
-        self.model = SamModel.from_pretrained(model_name)
+        self.processor = Sam2Processor.from_pretrained(model_name)
+        self.model = Sam2Model.from_pretrained(model_name)
         self.model.to(self.device)
         
         # Configurar para finetuning completo
@@ -62,8 +62,7 @@ class SAM2ClassicTrainer:
             self.optimizer, 
             mode='min', 
             factor=0.5, 
-            patience=3, 
-            verbose=True
+            patience=3
         )
         
         # Mixed precision training
@@ -297,8 +296,8 @@ def main():
                        help='Directorio del dataset de cataratas')
     parser.add_argument('--retinopathy_dir', type=str, required=True,
                        help='Directorio del dataset de retinopatía diabética')
-    parser.add_argument('--model_name', type=str, default='facebook/sam-vit-base',
-                       help='Nombre del modelo SAM')
+    parser.add_argument('--model_name', type=str, default='facebook/sam2-hiera-base-plus',
+                       help='Nombre del modelo SAM2')
     parser.add_argument('--batch_size', type=int, default=2,
                        help='Tamaño del batch')
     parser.add_argument('--num_epochs', type=int, default=10,

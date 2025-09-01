@@ -9,7 +9,7 @@ import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
 import argparse
-from transformers import SamModel, SamProcessor
+from transformers import Sam2Model, Sam2Processor
 from peft import PeftModel
 import json
 
@@ -19,7 +19,7 @@ from utils import visualize_prediction, calculate_iou
 class SAM2Inferencer:
     """Clase para realizar inferencia con modelos SAM2 fine-tuneados"""
     
-    def __init__(self, model_type, model_path, base_model_name="facebook/sam-vit-base"):
+    def __init__(self, model_type, model_path, base_model_name="facebook/sam2-hiera-base-plus"):
         """
         Args:
             model_type: "classic", "lora", o "qlora"
@@ -33,18 +33,18 @@ class SAM2Inferencer:
         print(f"Cargando modelo {model_type} desde {model_path}")
         
         # Cargar procesador
-        self.processor = SamProcessor.from_pretrained(base_model_name)
+        self.processor = Sam2Processor.from_pretrained(base_model_name)
         
         # Cargar modelo según el tipo
         if model_type == "classic":
-            self.model = SamModel.from_pretrained(base_model_name)
+            self.model = Sam2Model.from_pretrained(base_model_name)
             # Cargar checkpoint
             checkpoint = torch.load(model_path, map_location=self.device)
             self.model.load_state_dict(checkpoint['model_state_dict'])
         
         elif model_type in ["lora", "qlora"]:
             # Cargar modelo base
-            base_model = SamModel.from_pretrained(base_model_name)
+            base_model = Sam2Model.from_pretrained(base_model_name)
             # Cargar adaptadores LoRA/QLoRA
             self.model = PeftModel.from_pretrained(base_model, model_path)
         
@@ -294,7 +294,7 @@ def main():
                        help='Máximo número de muestras para evaluación')
     parser.add_argument('--points', type=str,
                        help='Puntos de entrada como "x1,y1;x2,y2"')
-    parser.add_argument('--base_model', type=str, default='facebook/sam-vit-base',
+    parser.add_argument('--base_model', type=str, default='facebook/sam2-hiera-base-plus',
                        help='Modelo base de SAM2')
     parser.add_argument('--compare_models', type=str,
                        help='JSON con configuración de múltiples modelos para comparar')

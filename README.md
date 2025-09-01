@@ -1,4 +1,20 @@
-# Finetuning de SAM2 para Segmentación Médica
+# Finetuning de SAM2 para Segmentación Médica ✅ ACTUALIZADO
+
+## 🔧 CORRECCIONES APLICADAS
+
+### ✅ Problemas Solucionados:
+1. **TypeError ReduceLROnPlateau**: Removido argumento `verbose` no soportado
+2. **Modelo actualizado**: Migrado de SAM a SAM2 oficial
+3. **Imports corregidos**: Usando `Sam2Model` y `Sam2Processor` de transformers
+4. **Modelo por defecto**: Cambiado a `facebook/sam2-hiera-base-plus`
+
+### 🎯 Modelos SAM2 Disponibles:
+- `facebook/sam2-hiera-tiny` (más rápido, menos preciso)
+- `facebook/sam2-hiera-small` (balance)
+- `facebook/sam2-hiera-base-plus` (recomendado, por defecto)
+- `facebook/sam2-hiera-large` (mejor rendimiento, más recursos)
+
+---
 
 Este proyecto implementa tres métodos de finetuning para SAM2 (Segment Anything Model 2) aplicado a segmentación médica usando datasets en formato COCO.
 

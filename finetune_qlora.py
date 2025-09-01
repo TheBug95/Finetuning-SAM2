@@ -8,7 +8,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.cuda.amp import GradScaler, autocast
-from transformers import SamModel, SamProcessor, BitsAndBytesConfig
+from transformers import Sam2Processor, Sam2Model, BitsAndBytesConfig
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training, TaskType
 from tqdm import tqdm
 import argparse
@@ -27,7 +27,7 @@ class SAM2QLoRATrainer:
     """Entrenador para finetuning de SAM2 con QLoRA"""
     
     def __init__(self, 
-                 model_name="facebook/sam-vit-base", 
+                 model_name="facebook/sam2-hiera-base-plus", 
                  learning_rate=2e-4,
                  lora_r=8,
                  lora_alpha=16,
@@ -60,10 +60,10 @@ class SAM2QLoRATrainer:
         print("Cargando modelo con quantización 4-bit...")
         
         # Cargar procesador
-        self.processor = SamProcessor.from_pretrained(model_name)
+        self.processor = Sam2Processor.from_pretrained(model_name)
         
         # Cargar modelo base con quantización
-        base_model = SamModel.from_pretrained(
+        base_model = Sam2Model.from_pretrained(
             model_name,
             quantization_config=bnb_config,
             device_map="auto" if torch.cuda.is_available() else None,
@@ -362,8 +362,8 @@ def main():
                        help='Directorio del dataset de cataratas')
     parser.add_argument('--retinopathy_dir', type=str, required=True,
                        help='Directorio del dataset de retinopatía diabética')
-    parser.add_argument('--model_name', type=str, default='facebook/sam-vit-base',
-                       help='Nombre del modelo SAM')
+    parser.add_argument('--model_name', type=str, default='facebook/sam2-hiera-base-plus',
+                       help='Nombre del modelo SAM2')
     parser.add_argument('--batch_size', type=int, default=2,
                        help='Tamaño del batch (menor debido a quantización)')
     parser.add_argument('--num_epochs', type=int, default=20,

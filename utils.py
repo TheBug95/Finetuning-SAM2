@@ -11,7 +11,7 @@ import torch
 from torch.utils.data import Dataset
 from PIL import Image
 from pycocotools import mask as coco_mask
-from transformers import SamProcessor
+from transformers import Sam2Processor
 import matplotlib.pyplot as plt
 from typing import List, Dict, Tuple, Optional
 
@@ -22,7 +22,7 @@ class COCOSegmentationDataset(Dataset):
     def __init__(self, 
                  data_dir: str, 
                  split: str = "train",
-                 processor: Optional[SamProcessor] = None,
+                 processor: Optional[Sam2Processor] = None,
                  max_samples: Optional[int] = None):
         """
         Args:
@@ -163,7 +163,7 @@ class COCOSegmentationDataset(Dataset):
 
 def create_data_loaders(cataract_dir: str, 
                        retinopathy_dir: str,
-                       processor: SamProcessor,
+                       processor: Sam2Processor,
                        batch_size: int = 4,
                        max_samples_per_dataset: Optional[int] = None):
     """
