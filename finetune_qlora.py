@@ -14,12 +14,13 @@ from tqdm import tqdm
 import argparse
 
 from utils import (
-    create_data_loaders, 
-    calculate_iou, 
+    create_data_loaders,
+    calculate_iou,
     print_training_progress,
     MetricsTracker,
     save_model_checkpoint,
-    visualize_prediction
+    visualize_prediction,
+    ensure_sam2_attention_dropout
 )
 
 
@@ -61,7 +62,7 @@ class SAM2QLoRATrainer:
         
         # Cargar procesador
         self.processor = Sam2Processor.from_pretrained(model_name)
-        
+
         # Cargar modelo base con quantización
         base_model = Sam2Model.from_pretrained(
             model_name,
@@ -69,7 +70,11 @@ class SAM2QLoRATrainer:
             device_map="auto" if torch.cuda.is_available() else None,
             torch_dtype=torch.float16
         )
-        
+
+        # Asegurar que las capas de atención tengan el atributo `dropout_p`
+        # para evitar errores durante el entrenamiento.
+        ensure_sam2_attention_dropout(base_model)
+
         # Preparar modelo para k-bit training
         base_model = prepare_model_for_kbit_training(base_model)
         

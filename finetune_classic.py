@@ -13,12 +13,13 @@ from tqdm import tqdm
 import argparse
 
 from utils import (
-    create_data_loaders, 
-    calculate_iou, 
+    create_data_loaders,
+    calculate_iou,
     print_training_progress,
     MetricsTracker,
     save_model_checkpoint,
-    visualize_prediction
+    visualize_prediction,
+    ensure_sam2_attention_dropout
 )
 
 
@@ -44,6 +45,11 @@ class SAM2ClassicTrainer:
         # Cargar modelo y procesador
         self.processor = Sam2Processor.from_pretrained(model_name)
         self.model = Sam2Model.from_pretrained(model_name)
+
+        # Algunos modelos SAM2 carecen del atributo `dropout_p` en las capas de
+        # atención, lo que causa errores al entrenar. Nos aseguramos de que
+        # esté presente con probabilidad cero de dropout.
+        ensure_sam2_attention_dropout(self.model)
         self.model.to(self.device)
         
         # Configurar para finetuning completo

@@ -16,6 +16,27 @@ import matplotlib.pyplot as plt
 from typing import List, Dict, Tuple, Optional
 
 
+def ensure_sam2_attention_dropout(model: torch.nn.Module) -> None:
+    """Ensure ``Sam2Attention`` layers expose ``dropout_p``.
+
+    Algunos lanzamientos tempranos de SAM2 no registran el atributo
+    ``dropout_p`` en sus capas de atención. Durante el entrenamiento esto
+    provoca un ``AttributeError`` al intentar aplicar dropout.
+
+    Este helper recorre el modelo e inserta el atributo con probabilidad
+    cero cuando no está presente. De esta forma mantenemos el comportamiento
+    original (sin dropout) y evitamos fallos en el forward.
+
+    Args:
+        model: instancia de ``torch.nn.Module`` que contiene las capas de
+            atención de SAM2.
+    """
+
+    for module in model.modules():
+        if module.__class__.__name__ == "Sam2Attention" and not hasattr(module, "dropout_p"):
+            module.dropout_p = 0.0
+
+
 class COCOSegmentationDataset(Dataset):
     """Dataset personalizado para datos COCO de segmentación médica"""
     
