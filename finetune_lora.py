@@ -167,14 +167,20 @@ class SAM2LoRATrainer:
                         )
                         
                         # Calcular loss
-                        pred_masks = outputs.pred_masks.squeeze(1)
-                        loss, bce_loss, dice_loss = self.compute_loss(pred_masks, gt_masks)
-                        
+                        pred_masks = (
+                            outputs.pred_masks.squeeze(0)
+                            .max(dim=0, keepdim=True)[0]
+                        )
+                        loss, bce_loss, dice_loss = self.compute_loss(
+                            pred_masks,
+                            gt_masks.unsqueeze(0)
+                        )
+
                         # Calcular IoU
                         with torch.no_grad():
                             iou = calculate_iou(
-                                torch.sigmoid(pred_masks), 
-                                gt_masks,
+                                torch.sigmoid(pred_masks),
+                                gt_masks.unsqueeze(0),
                                 threshold=0.5
                             )
                     
@@ -239,11 +245,17 @@ class SAM2LoRATrainer:
                         )
                         
                         # Calcular métricas
-                        pred_masks = outputs.pred_masks.squeeze(1)
-                        loss, _, _ = self.compute_loss(pred_masks, gt_masks)
+                        pred_masks = (
+                            outputs.pred_masks.squeeze(0)
+                            .max(dim=0, keepdim=True)[0]
+                        )
+                        loss, _, _ = self.compute_loss(
+                            pred_masks,
+                            gt_masks.unsqueeze(0)
+                        )
                         iou = calculate_iou(
-                            torch.sigmoid(pred_masks), 
-                            gt_masks,
+                            torch.sigmoid(pred_masks),
+                            gt_masks.unsqueeze(0),
                             threshold=0.5
                         )
                         

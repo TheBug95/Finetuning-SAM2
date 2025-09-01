@@ -101,8 +101,11 @@ class SAM2Inferencer:
             outputs = self.model(**inputs)
         
         # Procesar salida
-        pred_masks = outputs.pred_masks.squeeze().cpu().numpy()
-        pred_masks = torch.sigmoid(torch.tensor(pred_masks)).numpy()
+        pred_masks = (
+            outputs.pred_masks.squeeze(0)
+            .max(dim=0, keepdim=True)[0]
+        )
+        pred_masks = torch.sigmoid(pred_masks).squeeze().cpu().numpy()
         
         return {
             'image': np.array(image),
