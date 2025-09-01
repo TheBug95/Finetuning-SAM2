@@ -1,0 +1,17 @@
+[
+    {
+        "name": "Classic",
+        "type": "classic",
+        "path": "checkpoints_classic/sam2_classic_best.pth"
+    },
+    {
+        "name": "LoRA",
+        "type": "lora",
+        "path": "checkpoints_lora/sam2_lora_best"
+    },
+    {
+        "name": "QLoRA",
+        "type": "qlora",
+        "path": "checkpoints_qlora/sam2_qlora_best"
+    }
+]
