@@ -193,7 +193,10 @@ class SAM2ClassicTrainer:
                         )
                         
                         # Calcular loss
-                        pred_masks = outputs.pred_masks.squeeze(1)
+                        pred_masks = (
+                            outputs.pred_masks.squeeze(0)
+                            .max(dim=0, keepdim=True)[0]
+                        )
                         
                         # Asegurar que las dimensiones coincidan
                         if pred_masks.shape[-2:] != gt_masks.shape[-2:]:
@@ -319,7 +322,10 @@ class SAM2ClassicTrainer:
                         )
                         
                         # Calcular métricas
-                        pred_masks = outputs.pred_masks.squeeze(1)
+                        pred_masks = (
+                            outputs.pred_masks.squeeze(0)
+                            .max(dim=0, keepdim=True)[0]
+                        )
                         
                         # Asegurar que las dimensiones coincidan
                         if pred_masks.shape[-2:] != gt_masks.shape[-2:]:
