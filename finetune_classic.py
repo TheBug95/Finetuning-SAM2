@@ -127,8 +127,44 @@ class SAM2ClassicTrainer:
                 try:
                     # Mover a device
                     pixel_values = sample['pixel_values'].to(self.device)
-                    input_points = [points.to(self.device) for points in sample['input_points']]
-                    input_labels = [labels.to(self.device) for labels in sample['input_labels']]
+                    
+                    # Handle input_points - SAM2 processor returns nested lists
+                    input_points = sample['input_points']  # Should be [[[x,y], [x,y], ...]]
+                    input_labels = sample['input_labels']  # Should be [[[label], [label], ...]]
+                    
+                    # Convert nested lists to tensors and move to device
+                    if isinstance(input_points, list):
+                        # input_points is [batch][object][point][coord]
+                        input_points_tensors = []
+                        for batch_points in input_points:  # For each image in batch
+                            batch_tensors = []
+                            for obj_points in batch_points:  # For each object in image
+                                if isinstance(obj_points, list):
+                                    tensor_points = torch.tensor(obj_points, dtype=torch.float32).to(self.device)
+                                else:
+                                    tensor_points = obj_points.to(self.device)
+                                batch_tensors.append(tensor_points)
+                            input_points_tensors.append(batch_tensors)
+                        input_points = input_points_tensors
+                    else:
+                        input_points = input_points.to(self.device)
+                    
+                    if isinstance(input_labels, list):
+                        # input_labels is [batch][object][label]
+                        input_labels_tensors = []
+                        for batch_labels in input_labels:  # For each image in batch
+                            batch_tensors = []
+                            for obj_labels in batch_labels:  # For each object in image
+                                if isinstance(obj_labels, list):
+                                    tensor_labels = torch.tensor(obj_labels, dtype=torch.long).to(self.device)
+                                else:
+                                    tensor_labels = obj_labels.to(self.device)
+                                batch_tensors.append(tensor_labels)
+                            input_labels_tensors.append(batch_tensors)
+                        input_labels = input_labels_tensors
+                    else:
+                        input_labels = input_labels.to(self.device)
+                    
                     gt_masks = sample['ground_truth_masks'].to(self.device)
                     
                     # Verificar que gt_masks tenga la forma correcta
@@ -223,8 +259,42 @@ class SAM2ClassicTrainer:
                     try:
                         # Mover a device
                         pixel_values = sample['pixel_values'].to(self.device)
-                        input_points = [points.to(self.device) for points in sample['input_points']]
-                        input_labels = [labels.to(self.device) for labels in sample['input_labels']]
+                        
+                        # Handle input_points and input_labels (same as training)
+                        input_points = sample['input_points']
+                        input_labels = sample['input_labels']
+                        
+                        # Convert nested lists to tensors and move to device
+                        if isinstance(input_points, list):
+                            input_points_tensors = []
+                            for batch_points in input_points:
+                                batch_tensors = []
+                                for obj_points in batch_points:
+                                    if isinstance(obj_points, list):
+                                        tensor_points = torch.tensor(obj_points, dtype=torch.float32).to(self.device)
+                                    else:
+                                        tensor_points = obj_points.to(self.device)
+                                    batch_tensors.append(tensor_points)
+                                input_points_tensors.append(batch_tensors)
+                            input_points = input_points_tensors
+                        else:
+                            input_points = input_points.to(self.device)
+                        
+                        if isinstance(input_labels, list):
+                            input_labels_tensors = []
+                            for batch_labels in input_labels:
+                                batch_tensors = []
+                                for obj_labels in batch_labels:
+                                    if isinstance(obj_labels, list):
+                                        tensor_labels = torch.tensor(obj_labels, dtype=torch.long).to(self.device)
+                                    else:
+                                        tensor_labels = obj_labels.to(self.device)
+                                    batch_tensors.append(tensor_labels)
+                                input_labels_tensors.append(batch_tensors)
+                            input_labels = input_labels_tensors
+                        else:
+                            input_labels = input_labels.to(self.device)
+                        
                         gt_masks = sample['ground_truth_masks'].to(self.device)
                         
                         # Verificar que gt_masks tenga la forma correcta

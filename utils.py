@@ -113,6 +113,13 @@ class COCOSegmentationDataset(Dataset):
         # Aplicar procesamiento si está disponible
         if self.processor:
             sample = self._process_sample(sample)
+        else:
+            # Si no hay processor, al menos convertir la imagen a tensor para el DataLoader
+            import torchvision.transforms as transforms
+            transform = transforms.Compose([
+                transforms.ToTensor(),
+            ])
+            sample['image'] = transform(sample['image'])
         
         return sample
     
