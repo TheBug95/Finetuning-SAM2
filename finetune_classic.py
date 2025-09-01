@@ -7,7 +7,7 @@ import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.cuda.amp import GradScaler, autocast
+from torch.amp import GradScaler, autocast
 from transformers import Sam2Model, Sam2Processor
 from tqdm import tqdm
 import argparse
@@ -66,7 +66,7 @@ class SAM2ClassicTrainer:
         )
         
         # Mixed precision training
-        self.scaler = GradScaler()
+        self.scaler = GradScaler('cuda')
         
         # Métricas
         self.metrics = MetricsTracker()
@@ -121,7 +121,7 @@ class SAM2ClassicTrainer:
             
             batch_loss = 0
             batch_iou = 0
-            batch_size = len(batch)
+            valid_samples = 0
             
             for sample in batch:
                 try:
@@ -131,7 +131,18 @@ class SAM2ClassicTrainer:
                     input_labels = [labels.to(self.device) for labels in sample['input_labels']]
                     gt_masks = sample['ground_truth_masks'].to(self.device)
                     
-                    with autocast():
+                    # Verificar que gt_masks tenga la forma correcta
+                    if len(gt_masks.shape) == 3:
+                        # Si hay múltiples máscaras, tomar la primera o combinarlas
+                        gt_masks = gt_masks.max(dim=0)[0]  # Combinar máscaras superpuestas
+                    
+                    # Asegurar que gt_masks tenga la forma correcta [H, W]
+                    if len(gt_masks.shape) == 1:
+                        # Si es 1D, reshape según las dimensiones de la imagen
+                        h, w = pixel_values.shape[-2:]
+                        gt_masks = gt_masks.view(h, w)
+                    
+                    with autocast('cuda'):
                         # Forward pass
                         outputs = self.model(
                             pixel_values=pixel_values,
@@ -141,27 +152,39 @@ class SAM2ClassicTrainer:
                         
                         # Calcular loss
                         pred_masks = outputs.pred_masks.squeeze(1)
-                        loss, bce_loss, dice_loss = self.compute_loss(pred_masks, gt_masks)
+                        
+                        # Asegurar que las dimensiones coincidan
+                        if pred_masks.shape[-2:] != gt_masks.shape[-2:]:
+                            gt_masks = torch.nn.functional.interpolate(
+                                gt_masks.unsqueeze(0).unsqueeze(0), 
+                                size=pred_masks.shape[-2:], 
+                                mode='nearest'
+                            ).squeeze()
+                        
+                        loss, bce_loss, dice_loss = self.compute_loss(pred_masks, gt_masks.unsqueeze(0))
                         
                         # Calcular IoU
                         with torch.no_grad():
                             iou = calculate_iou(
                                 torch.sigmoid(pred_masks), 
-                                gt_masks,
+                                gt_masks.unsqueeze(0),
                                 threshold=0.5
                             )
                     
-                    batch_loss += loss
-                    batch_iou += iou
+                    # Acumular solo si el loss es válido
+                    if torch.isfinite(loss):
+                        batch_loss += loss
+                        batch_iou += iou
+                        valid_samples += 1
                     
                 except Exception as e:
                     print(f"Error en sample: {e}")
                     continue
             
-            if batch_size > 0:
+            if valid_samples > 0:
                 # Promedio del batch
-                batch_loss = batch_loss / batch_size
-                batch_iou = batch_iou / batch_size
+                batch_loss = batch_loss / valid_samples
+                batch_iou = batch_iou / valid_samples
                 
                 # Backward pass
                 self.scaler.scale(batch_loss).backward()
@@ -194,7 +217,7 @@ class SAM2ClassicTrainer:
             for batch in tqdm(val_loader, desc="Validando"):
                 batch_loss = 0
                 batch_iou = 0
-                batch_size = len(batch)
+                valid_samples = 0
                 
                 for sample in batch:
                     try:
@@ -203,6 +226,14 @@ class SAM2ClassicTrainer:
                         input_points = [points.to(self.device) for points in sample['input_points']]
                         input_labels = [labels.to(self.device) for labels in sample['input_labels']]
                         gt_masks = sample['ground_truth_masks'].to(self.device)
+                        
+                        # Verificar que gt_masks tenga la forma correcta
+                        if len(gt_masks.shape) == 3:
+                            gt_masks = gt_masks.max(dim=0)[0]
+                        
+                        if len(gt_masks.shape) == 1:
+                            h, w = pixel_values.shape[-2:]
+                            gt_masks = gt_masks.view(h, w)
                         
                         # Forward pass
                         outputs = self.model(
@@ -213,23 +244,34 @@ class SAM2ClassicTrainer:
                         
                         # Calcular métricas
                         pred_masks = outputs.pred_masks.squeeze(1)
-                        loss, _, _ = self.compute_loss(pred_masks, gt_masks)
+                        
+                        # Asegurar que las dimensiones coincidan
+                        if pred_masks.shape[-2:] != gt_masks.shape[-2:]:
+                            gt_masks = torch.nn.functional.interpolate(
+                                gt_masks.unsqueeze(0).unsqueeze(0), 
+                                size=pred_masks.shape[-2:], 
+                                mode='nearest'
+                            ).squeeze()
+                        
+                        loss, _, _ = self.compute_loss(pred_masks, gt_masks.unsqueeze(0))
                         iou = calculate_iou(
                             torch.sigmoid(pred_masks), 
-                            gt_masks,
+                            gt_masks.unsqueeze(0),
                             threshold=0.5
                         )
                         
-                        batch_loss += loss
-                        batch_iou += iou
+                        if torch.isfinite(loss):
+                            batch_loss += loss
+                            batch_iou += iou
+                            valid_samples += 1
                         
                     except Exception as e:
                         print(f"Error en validación: {e}")
                         continue
                 
-                if batch_size > 0:
-                    total_loss += (batch_loss / batch_size).item()
-                    total_iou += batch_iou / batch_size
+                if valid_samples > 0:
+                    total_loss += (batch_loss / valid_samples).item()
+                    total_iou += batch_iou / valid_samples
                     num_batches += 1
         
         avg_loss = total_loss / max(num_batches, 1)

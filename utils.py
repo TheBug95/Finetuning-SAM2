@@ -162,8 +162,28 @@ class COCOSegmentationDataset(Dataset):
             return_tensors="pt"
         )
         
-        # Agregar máscaras ground truth
-        processed['ground_truth_masks'] = torch.tensor(sample['masks'], dtype=torch.float32)
+        # Agregar máscaras ground truth - asegurar formato correcto
+        masks = sample['masks']
+        if isinstance(masks, np.ndarray):
+            if len(masks.shape) == 3 and masks.shape[0] > 0:
+                # Si hay múltiples máscaras, combinarlas
+                combined_mask = np.any(masks, axis=0).astype(np.float32)
+            elif len(masks.shape) == 2:
+                combined_mask = masks.astype(np.float32)
+            else:
+                # Crear máscara vacía si no hay máscaras válidas
+                h, w = sample['image'].size[1], sample['image'].size[0]
+                combined_mask = np.zeros((h, w), dtype=np.float32)
+        else:
+            # Si masks es una lista, convertir a array
+            masks = np.array(masks)
+            if len(masks) > 0:
+                combined_mask = np.any(masks, axis=0).astype(np.float32)
+            else:
+                h, w = sample['image'].size[1], sample['image'].size[0]
+                combined_mask = np.zeros((h, w), dtype=np.float32)
+        
+        processed['ground_truth_masks'] = torch.tensor(combined_mask, dtype=torch.float32)
         processed['labels'] = torch.tensor(sample['labels'])
         processed['image_id'] = sample['image_id']
         
