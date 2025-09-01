@@ -11,7 +11,7 @@ import os
 def test_implementation():
     """Prueba rápida de la implementación"""
     
-    print("🔍 PRUEBA RÁPIDA DE IMPLEMENTACIÓN SAM2")
+    print("[TEST] PRUEBA RÁPIDA DE IMPLEMENTACIÓN SAM2")
     print("=" * 60)
     
     # Verificar que existen los datasets
@@ -19,17 +19,17 @@ def test_implementation():
     retinopathy_dir = "data/Diabetic-Retinopathy COCO Segmentation"
     
     if not os.path.exists(cataract_dir):
-        print(f"❌ Error: No se encuentra {cataract_dir}")
+        print(f"[ERROR] No se encuentra {cataract_dir}")
         return False
     
     if not os.path.exists(retinopathy_dir):
-        print(f"❌ Error: No se encuentra {retinopathy_dir}")
+        print(f"[ERROR] No se encuentra {retinopathy_dir}")
         return False
     
-    print("✅ Datasets encontrados")
+    print("[OK] Datasets encontrados")
     
     # Ejecutar prueba rápida con QLoRA (más eficiente)
-    print("\n🚀 Ejecutando prueba con QLoRA (5 épocas, 5 muestras)...")
+    print("\n[RUN] Ejecutando prueba con QLoRA (5 épocas, 5 muestras)...")
     
     cmd = [
         sys.executable, "main.py",
@@ -46,32 +46,32 @@ def test_implementation():
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)  # 10 min timeout
         
         if result.returncode == 0:
-            print("✅ Prueba de entrenamiento exitosa!")
+            print("[OK] Prueba de entrenamiento exitosa!")
             return True
         else:
-            print("❌ Error en entrenamiento:")
+            print("[ERROR] Error en entrenamiento:")
             print(result.stderr)
             return False
             
     except subprocess.TimeoutExpired:
-        print("⏰ Timeout - el entrenamiento tomó demasiado tiempo")
+        print("[TIMEOUT] el entrenamiento tomó demasiado tiempo")
         return False
     except Exception as e:
-        print(f"❌ Error ejecutando prueba: {e}")
+        print(f"[ERROR] Error ejecutando prueba: {e}")
         return False
 
 
 def test_inference():
     """Prueba la inferencia si existe un modelo entrenado"""
     
-    print("\n🔍 PRUEBA DE INFERENCIA")
+    print("\n[TEST] PRUEBA DE INFERENCIA")
     print("=" * 40)
     
     # Buscar modelo de prueba
     test_model_path = "test_checkpoints/sam2_qlora_best"
     
     if not os.path.exists(test_model_path):
-        print("⚠️  No se encontró modelo de prueba para inferencia")
+        print("[WARN] No se encontró modelo de prueba para inferencia")
         return True  # No es error crítico
     
     # Buscar imagen de prueba
@@ -142,28 +142,28 @@ def cleanup():
 def main():
     """Ejecuta todas las pruebas"""
     
-    print("🧪 INICIANDO PRUEBAS DE IMPLEMENTACIÓN SAM2")
+    print("[TEST] INICIANDO PRUEBAS DE IMPLEMENTACIÓN SAM2")
     print("=" * 80)
     
     # Prueba 1: Entrenamiento
     if not test_implementation():
-        print("\n❌ PRUEBA FALLIDA: Error en entrenamiento")
+        print("\n[FAIL] PRUEBA FALLIDA: Error en entrenamiento")
         return
     
     # Prueba 2: Inferencia
     if not test_inference():
-        print("\n❌ PRUEBA FALLIDA: Error en inferencia")
+        print("\n[FAIL] PRUEBA FALLIDA: Error en inferencia")
         return
     
-    print("\n✅ TODAS LAS PRUEBAS EXITOSAS!")
-    print("🎉 La implementación funciona correctamente")
+    print("\n[SUCCESS] TODAS LAS PRUEBAS EXITOSAS!")
+    print("[INFO] La implementación funciona correctamente")
     
     # Preguntar si limpiar
     response = input("\n¿Limpiar archivos de prueba? (y/N): ")
     if response.lower() in ['y', 'yes', 's', 'si']:
         cleanup()
     
-    print("\n📚 SIGUIENTE PASO:")
+    print("\n[NEXT] SIGUIENTE PASO:")
     print("Ejecutar entrenamiento completo con:")
     print("python main.py --cataract_dir 'data/Cataract COCO Segmentation' \\")
     print("               --retinopathy_dir 'data/Diabetic-Retinopathy COCO Segmentation' \\")

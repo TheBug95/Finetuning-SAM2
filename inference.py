@@ -77,11 +77,19 @@ class SAM2Inferencer:
             input_points = [[w//2, h//2]]
             input_labels = [1]
         
+        # Formato correcto para SAM2: [imagen[objeto[punto[x,y]]]]
+        formatted_points = []
+        formatted_labels = []
+        
+        for point, label in zip(input_points, input_labels):
+            formatted_points.append([point])  # Cada objeto tiene una lista de puntos
+            formatted_labels.append([label])  # Cada objeto tiene una lista de etiquetas
+        
         # Procesar entrada
         inputs = self.processor(
             image, 
-            input_points=[input_points], 
-            input_labels=[input_labels], 
+            input_points=[formatted_points], 
+            input_labels=[formatted_labels], 
             return_tensors="pt"
         )
         

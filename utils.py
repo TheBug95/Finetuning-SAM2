@@ -125,7 +125,7 @@ class COCOSegmentationDataset(Dataset):
         return mask
     
     def _process_sample(self, sample):
-        """Aplica el procesamiento específico de SAM"""
+        """Aplica el procesamiento específico de SAM2"""
         # Generar puntos de entrada automáticamente desde las máscaras
         input_points = []
         input_labels = []
@@ -145,11 +145,20 @@ class COCOSegmentationDataset(Dataset):
             input_points = [[w//2, h//2]]
             input_labels = [1]
         
-        # Procesar con SAM processor
+        # Formato correcto para SAM2: [imagen, objeto, punto, coordenadas]
+        # Para una imagen con múltiples objetos
+        formatted_points = []
+        formatted_labels = []
+        
+        for point, label in zip(input_points, input_labels):
+            formatted_points.append([point])  # Cada objeto tiene una lista de puntos
+            formatted_labels.append([label])  # Cada objeto tiene una lista de etiquetas
+        
+        # Procesar con SAM2 processor
         processed = self.processor(
             sample['image'],
-            input_points=[input_points],
-            input_labels=[input_labels],
+            input_points=[formatted_points],  # [imagen[objeto[punto[x,y]]]]
+            input_labels=[formatted_labels],  # [imagen[objeto[etiqueta]]]
             return_tensors="pt"
         )
         

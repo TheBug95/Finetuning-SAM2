@@ -171,7 +171,7 @@ Ejemplos de uso:
                        help='Ejecutar todos los métodos')
     
     # Configuración general
-    parser.add_argument('--model_name', type=str, default='facebook/sam2-hiera-base-plus',
+    parser.add_argument('--model_name', type=str, default='facebook/sam2-hiera-tiny',
                        help='Nombre del modelo SAM2')
     parser.add_argument('--max_samples', type=int, default=None,
                        help='Máximo número de muestras por dataset (para testing)')
@@ -253,11 +253,11 @@ Ejemplos de uso:
     
     print("\nMétodos a ejecutar:")
     if args.run_classic:
-        print(f"✓ Clásico: {args.classic_epochs} épocas, batch={args.classic_batch_size}, lr={args.classic_lr}")
+        print(f"[OK] Clásico: {args.classic_epochs} épocas, batch={args.classic_batch_size}, lr={args.classic_lr}")
     if args.run_lora:
-        print(f"✓ LoRA: {args.lora_epochs} épocas, batch={args.lora_batch_size}, lr={args.lora_lr}, r={args.lora_r}")
+        print(f"[OK] LoRA: {args.lora_epochs} épocas, batch={args.lora_batch_size}, lr={args.lora_lr}, r={args.lora_r}")
     if args.run_qlora:
-        print(f"✓ QLoRA: {args.qlora_epochs} épocas, batch={args.qlora_batch_size}, lr={args.qlora_lr}, r={args.qlora_r}")
+        print(f"[OK] QLoRA: {args.qlora_epochs} épocas, batch={args.qlora_batch_size}, lr={args.qlora_lr}, r={args.qlora_r}")
     
     # Ejecutar métodos
     total_start_time = time.time()
@@ -284,7 +284,7 @@ Ejemplos de uso:
     print(f"Tiempo total: {total_end_time - total_start_time:.2f} segundos")
     
     for method, success in results.items():
-        status = "✓ EXITOSO" if success else "✗ FALLÓ"
+        status = "[OK] EXITOSO" if success else "[FAIL] FALLÓ"
         print(f"{method.upper()}: {status}")
     
     # Comparar resultados si se ejecutó más de un método
